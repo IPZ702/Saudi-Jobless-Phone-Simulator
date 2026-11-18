@@ -211,12 +211,10 @@ function unlock() {
     }, 500);
 }
 
-// دالة محاكاة مكالمة "العطالة تتصل بك" بشيء يطابق واجهة أبل الأصلية
 // دالة محاكاة مكالمة "العطالة تتصل بك" بخلفية صورة مخصصة من رابط
 function showIncomingCall() {
     if (document.getElementById('incoming-call-screen')) return;
 
-    // ضع هنا رابط الصورة المباشر الذي تريده خلفية للمكالمة (مثلاً رابط مباشر من جوجل درايف أو Unsplash)
     const callerBgUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAYj-S4rRc4el02zILvc_7sGVQ_Uo54BGt4qVrbpjxGw&s=10';
 
     const callDiv = document.createElement('div');
@@ -243,15 +241,9 @@ function showIncomingCall() {
                 from { transform: translateY(100%); opacity: 0; }
                 to { transform: translateY(0); opacity: 1; }
             }
-            @keyframes pulseRing {
-                0% { transform: scale(1); opacity: 0.6; }
-                50% { transform: scale(1.1); opacity: 0.2; }
-                100% { transform: scale(1); opacity: 0.6; }
-            }
         </style>
         
         <div style="margin-top: 40px;">
-            
             <h1 style="font-size: 32px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.6);">العطالة</h1>
             <p style="font-size: 18px; color: rgba(255,255,255,0.8); font-weight: 400; text-shadow: 0 1px 5px rgba(0,0,0,0.6);">مكالمة واردة...</p>
         </div>
@@ -287,6 +279,10 @@ function showIncomingCall() {
     });
 
     document.getElementById('accept-call').addEventListener('click', () => {
+        // تشغيل الملف الصوتي theboss.mp3
+        const bossAudio = new Audio('theboss.mp3');
+        bossAudio.play().catch(e => console.log('تعذر تشغيل الصوت تلقائياً:', e));
+
         callDiv.innerHTML = `
             <div style="margin-top: 40px;">
                 <h1 style="font-size: 28px; font-weight: 600; margin-bottom: 6px; text-shadow: 0 2px 10px rgba(0,0,0,0.6);">العطالة</h1>
@@ -319,7 +315,21 @@ function showIncomingCall() {
         `;
 
         let seconds = 1;
+        const maxDuration = 23; // تحديد المدة بـ 22 ثانية
+
         const timerInterval = setInterval(() => {
+            if (seconds >= maxDuration) {
+                clearInterval(timerInterval);
+                bossAudio.pause();
+                bossAudio.currentTime = 0;
+                callDiv.style.transition = 'all 0.4s ease';
+                callDiv.style.transform = 'translateY(100%)';
+                callDiv.style.opacity = '0';
+                setTimeout(() => callDiv.remove(), 400);
+                showToast('📞 انتهت المكالمة');
+                return;
+            }
+
             seconds++;
             const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
             const secs = (seconds % 60).toString().padStart(2, '0');
@@ -330,6 +340,8 @@ function showIncomingCall() {
 
         document.getElementById('end-call').addEventListener('click', () => {
             clearInterval(timerInterval);
+            bossAudio.pause();
+            bossAudio.currentTime = 0;
             callDiv.style.transition = 'all 0.4s ease';
             callDiv.style.transform = 'translateY(100%)';
             callDiv.style.opacity = '0';
